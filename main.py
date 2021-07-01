@@ -66,27 +66,29 @@ class Queue:
             "queue")
 
         for role in message.guild.roles:
-            if role is not self.role:
+            if role != self.role:
                 await self.queue_channel.set_permissions(role, speak=False, connect=True)
 
     async def rebuild_manager(self):
-        if self.manager_embed is not None:
-            await self.manager_embed.delete()
-            self.manager_embed = None
+        await self.manager_channel.purge()
+
         message = await self.manager_channel.send(
             embed=self.get_manager_embed())
 
         self.manager_embed = message
-
-        await self.add_reactions_to_manager_embed()
+        try:
+            await self.add_reactions_to_manager_embed()
+        except Exception:
+            print("Could not add reactions")
 
     def get_manager_embed(self):
         embed = discord.Embed(title="Queue Management", colour=discord.Colour(0xd02e1c))
         if len(self.waiting_people) == 0:
             embed.add_field(name=":warning: ", value="Nobody waiting...")
         for person in self.waiting_people:
-            embed.add_field(name="**" + str(self.waiting_people.index(person) + 1) + ".**  " + person.name,
-                            value="____________________")
+            embed.add_field(
+                name="**" + str(self.waiting_people.index(person) + 1) + ".**  {}".format(person.name),
+                value="\u200b", inline=False)
         return embed  # Return the embed
 
     async def add_reactions_to_manager_embed(
@@ -96,8 +98,9 @@ class Queue:
         await self.manager_embed.add_reaction(KICK_EMOJI)
 
     async def handle_message(self, m):
-        if m.author is self.host:
+        if m.author == self.host:
             if m.content.startswith("!endQ") or m.content.startswith("!endq"):
+                print("ending queue")
                 for channel in self.category.channels:
                     await channel.delete()
                 await self.role.delete()
@@ -121,20 +124,19 @@ class Queue:
                 await self.next_person(randomize=True)
 
         elif reaction.message == self.manager_embed and user != client.user:
-            await reaction.message.channel.send(":x: You don't have the permission to manage :x:")
+            await reaction.message.channel.send(":x: You are not the host {}".format(user.mention))
 
     async def next_person(self, only_kick=False, randomize=False):
 
         for member in self.interview_channel.members:
-            if member is not self.host:
+            if self.role not in member.roles:
                 await member.move_to(None)
 
         if not only_kick:
             if len(self.waiting_people) == 0:
-                await self.manager_channel.send("Nobody waiting...")
                 await self.rebuild_manager()
                 return
-            if randomize:
+            elif randomize:
                 random_member = self.waiting_people[random.randint(0, len(self.waiting_people) - 1)]
                 await random_member.move_to(self.interview_channel)
                 return
@@ -170,21 +172,24 @@ class BotClient(discord.Client):
                     await role.delete()
 
     async def on_message(self, m):
+        print("Message")
         if m.author == client.user:
             return
         elif m.content.startswith("!startQ ") or m.content.startswith("!startq "):
             await create_queue(m)
         else:
             for queue in QUEUES:
-                if m.channel.category == queue.category:
+                if m.channel == queue.manager_channel:
+                    print("Handling message")
                     await queue.handle_message(m)
 
     async def on_voice_state_update(self, member, before, after):
+        print("Voice state update")
         for queue in QUEUES:
-            if after.channel is queue.queue_channel:
+            if after.channel == queue.queue_channel:
                 print(member.name + " joined the queue")
                 await queue.person_joined(member)
-            elif before.channel is queue.queue_channel:
+            elif before.channel == queue.queue_channel:
                 print(member.name + " left the queue")
                 await queue.person_left(member)
 
@@ -195,4 +200,4 @@ class BotClient(discord.Client):
 
 
 client = BotClient()
-client.run(token) 
+client.run(token)
