@@ -175,4 +175,4 @@ class BotClient(discord.Client):
 
 
 client = BotClient()
-client.run("")
+client.run("") ### Insert TOKEN !!!
