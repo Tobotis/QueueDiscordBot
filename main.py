@@ -1,9 +1,10 @@
 import discord
-from discord.ext import commands
+import random
 
-QUEUES = []  # Keeps track of all queues which are running
-KICK_EMOJI = "⏸"
-NEXT_EMOJI = "⏬"
+QUEUES = []  # Keeps track of all running queues
+KICK_EMOJI = "⏹"
+NEXT_EMOJI = "↪"
+NEXT_RANDOM_EMOJI = "🔀"
 
 
 async def create_queue(message):
@@ -80,15 +81,16 @@ class Queue:
     def get_manager_embed(self):
         embed = discord.Embed(title="Queue Management", colour=discord.Colour(0xd02e1c))
         if len(self.waiting_people) == 0:
-            embed.add_field(name="Nobody waiting...", value="Try to motivate someone to talk with you")
+            embed.add_field(name=":warning: ", value="Nobody waiting...")
         for person in self.waiting_people:
-            embed.add_field(name=str(self.waiting_people.index(person) + 1), value=person.name)
-        embed.set_footer(text="Manage by reacting to this message")
+            embed.add_field(name="**" + str(self.waiting_people.index(person) + 1) + ".**  " + person.name,
+                            value="____________________")
         return embed  # Return the embed
 
     async def add_reactions_to_manager_embed(
             self):
         await self.manager_embed.add_reaction(NEXT_EMOJI)
+        await self.manager_embed.add_reaction(NEXT_RANDOM_EMOJI)
         await self.manager_embed.add_reaction(KICK_EMOJI)
 
     async def handle_message(self, m):
@@ -103,6 +105,8 @@ class Queue:
                 await self.next_person()
             elif m.content.startswith("!kick"):
                 await self.next_person(only_kick=True)
+            elif m.content.startswith("!random"):
+                await self.next_person(randomize=True)
 
     async def handle_reaction(self, reaction, user):
         if reaction.message == self.manager_embed and user == self.host:
@@ -110,21 +114,33 @@ class Queue:
                 await self.next_person()
             elif reaction.emoji == KICK_EMOJI:
                 await self.next_person(only_kick=True)
+                await self.rebuild_manager()
+            elif reaction.emoji == NEXT_RANDOM_EMOJI:
+                await self.next_person(randomize=True)
 
         elif reaction.message == self.manager_embed and user != client.user:
             await reaction.message.channel.send(":x: You don't have the permission to manage :x:")
 
-    async def next_person(self, only_kick=False):
+    async def next_person(self, only_kick=False, randomize=False):
+
         for member in self.interview_channel.members:
             if member is not self.host:
-                await member.move_to()
+                await member.move_to(None)
+
         if not only_kick:
-            for member in self.waiting_people:
-                if member in self.queue_channel.members:
-                    await member.move_to(self.interview_channel)
-                    await self.rebuild_manager()
-                    return
-            await self.manager_channel.send("Nobody waiting...")
+            if len(self.waiting_people) == 0:
+                await self.manager_channel.send("Nobody waiting...")
+                await self.rebuild_manager()
+                return
+            if randomize:
+                random_member = self.waiting_people[random.randint(0, len(self.waiting_people) - 1)]
+                await random_member.move_to(self.interview_channel)
+                return
+            else:
+                for member in self.waiting_people:
+                    if member in self.queue_channel.members:
+                        await member.move_to(self.interview_channel)
+                        return
 
     async def person_joined(self, member, ):
         self.waiting_people.append(member)
@@ -156,16 +172,18 @@ class BotClient(discord.Client):
             return
         elif m.content.startswith("!startQ ") or m.content.startswith("!startq "):
             await create_queue(m)
-        for queue in QUEUES:
-            if m.channel.category == queue.category:
-                await queue.handle_message(m)
+        else:
+            for queue in QUEUES:
+                if m.channel.category == queue.category:
+                    await queue.handle_message(m)
 
     async def on_voice_state_update(self, member, before, after):
         for queue in QUEUES:
             if after.channel is queue.queue_channel:
-                print("New person")
+                print(member.name + " joined the queue")
                 await queue.person_joined(member)
             elif before.channel is queue.queue_channel:
+                print(member.name + " left the queue")
                 await queue.person_left(member)
 
     async def on_reaction_add(self, reaction, user):
