@@ -1,5 +1,7 @@
 import discord
 import random
+import os
+
 token = os.getenv("queuebottoken")
 QUEUES = []  # Keeps track of all running queues
 KICK_EMOJI = "⏹"
