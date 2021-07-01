@@ -1,108 +1,178 @@
 import discord
+from discord.ext import commands
 
 QUEUES = []  # Keeps track of all queues which are running
+KICK_EMOJI = "⏸"
+NEXT_EMOJI = "⏬"
 
 
-async def create_queue(message):  # Create a new Queue
-    name = str(message.content)[7:]  # Get the name of the queue
-    already_used = False  # True if the name is already in use
+async def create_queue(message):
+    name = str(message.content)[7:]
+    already_used = False
     if name is None:
-        await message.channel.send("No valid !startQ command: !startQ [queue title]")  # Send an explanation
+        await message.channel.send("No valid !startQ command: !startQ [queue title]")
         return
-    for queue in QUEUES:  # Iterate through all the current queues
-        if name.upper() == queue.category.name.upper()[7:]:  # Check if the name is the same
+    for queue in QUEUES:
+        if name.upper() == queue.category.name.upper()[7:]:
             already_used = True
-    if already_used:  # Check if the name is already in use
-        await message.channel.send("The name is already in use :slight_frown:")  # Send an explanation
-    else:  # Create a new queue
-        queue = Queue(message.author)  # Instantiate a new Queue
-        QUEUES.append(queue)  # Add it in the list of the current queues
-        await queue.setup(message)  # Setup the queue
+    if already_used:
+        await message.channel.send("The name is already in use :slight_frown:")
+    else:
+        queue = Queue(message.author)
+        QUEUES.append(queue)
+        await queue.setup(message)
 
 
-class Queue:  # Queue class (instantiated for every Queue)
-    def __init__(self, host, bot_role):
+class Queue:
+    def __init__(self, host):
         self.waiting_people = []
         self.host = host
         self.manager_embed = None
         self.manager_channel = None
-        self.bot_role = bot_role
+        self.queue_channel = None
+        self.interview_channel = None
         self.role = None
         self.category = None
 
-    async def setup(self, m):  # Takes a message and setups the queue
+    async def setup(self, m):
         self.role = await m.channel.guild.create_role(name="QUEUE " + m.content[8:])
-        await self.setup_category(m)
-        self.manager_channel = await self.category.create_text_channel(
-            "manager")
         await self.host.add_roles(self.role)
+        for guild in client.guilds:
+            if guild == m.channel.guild:
+                member = guild.get_member(client.user.id)
+                await member.add_roles(self.role)
+                break
+
+        await self.setup_category(m)
         await self.rebuild_manager()
 
     async def setup_category(self, message):
         self.category = await message.guild.create_category(
-            "QUEUE " + message.content[7:])  # Create the queue category with the name
-        for role in message.channel.guild.roles:
-            await self.category.set_permissions(role, send_messages=False, add_reactions=False, connect=False)
-        await self.category.set_permissions(self.role, send_messages=True, add_reactions=True, connect=True)
+            "QUEUE " + message.content[7:])
+        for role in message.guild.roles:
+            await self.category.set_permissions(role, send_messages=False, add_reactions=False, connect=False, )
+        await self.category.set_permissions(self.role, add_reactions=True, connect=True, send_messages=True, )
 
-    async def rebuild_manager(self):  # Displays the manager embed
-        if self.manager_embed is not None:  # Check if the old manager embed should be deleted
-            # and if there is an old one existing
-            await self.manager_embed.delete()  # Delete the manager embed
+        self.manager_channel = await self.category.create_text_channel(
+            "manager")
+
+        self.interview_channel = await self.category.create_voice_channel(
+            "interview")
+
+        self.queue_channel = await self.category.create_voice_channel(
+            "queue")
+
+        for role in message.guild.roles:
+            if role is not self.role:
+                await self.queue_channel.set_permissions(role, speak=False, connect=True)
+
+    async def rebuild_manager(self):
+        if self.manager_embed is not None:
+            await self.manager_embed.delete()
             self.manager_embed = None
         message = await self.manager_channel.send(
-            embed=self.get_manager_embed())  # Send the new embed in the manager channel
+            embed=self.get_manager_embed())
 
-        self.manager_embed = message  # Set the new manager embed
+        self.manager_embed = message
 
-        await self.add_reactions_to_game_manager_embed()  # Add the default reactions to the embed
+        await self.add_reactions_to_manager_embed()
 
-    async def add_reactions_to_game_manager_embed(
-            self):  # Add the default reactions to the embed, so its easier for the user to react
-        await self.manager_embed.add_reaction("⏩")
-
-    def get_manager_embed(self):  # Get the manager embed
-        # Set the embed
+    def get_manager_embed(self):
         embed = discord.Embed(title="Queue Management", colour=discord.Colour(0xd02e1c))
         if len(self.waiting_people) == 0:
             embed.add_field(name="Nobody waiting...", value="Try to motivate someone to talk with you")
-
+        for person in self.waiting_people:
+            embed.add_field(name=str(self.waiting_people.index(person) + 1), value=person.name)
         embed.set_footer(text="Manage by reacting to this message")
         return embed  # Return the embed
 
+    async def add_reactions_to_manager_embed(
+            self):
+        await self.manager_embed.add_reaction(NEXT_EMOJI)
+        await self.manager_embed.add_reaction(KICK_EMOJI)
 
-class BotClient(discord.Client):  # Client class
-    async def on_ready(self):  # Initialization
+    async def handle_message(self, m):
+        if m.author is self.host:
+            if m.content.startswith("!endQ") or m.content.startswith("!endq"):
+                for channel in self.category.channels:
+                    await channel.delete()
+                await self.role.delete()
+                await self.category.delete()
+                QUEUES.remove(self)
+            elif m.content.startswith("!next"):
+                await self.next_person()
+            elif m.content.startswith("!kick"):
+                await self.next_person(only_kick=True)
+
+    async def handle_reaction(self, reaction, user):
+        if reaction.message == self.manager_embed and user == self.host:
+            if reaction.emoji == NEXT_EMOJI:
+                await self.next_person()
+            elif reaction.emoji == KICK_EMOJI:
+                await self.next_person(only_kick=True)
+
+        elif reaction.message == self.manager_embed and user != client.user:
+            await reaction.message.channel.send(":x: You don't have the permission to manage :x:")
+
+    async def next_person(self, only_kick=False):
+        for member in self.interview_channel.members:
+            if member is not self.host:
+                await member.move_to()
+        if not only_kick:
+            for member in self.waiting_people:
+                if member in self.queue_channel.members:
+                    await member.move_to(self.interview_channel)
+                    await self.rebuild_manager()
+                    return
+            await self.manager_channel.send("Nobody waiting...")
+
+    async def person_joined(self, member, ):
+        self.waiting_people.append(member)
+        await self.rebuild_manager()
+
+    async def person_left(self, member, ):
+        self.waiting_people.remove(member)
+        await self.rebuild_manager()
+
+
+class BotClient(discord.Client):
+    async def on_ready(self):
         print("Initialization...")
-        guilds = client.guilds  # Get all the guilds of the bot
-        for guild in guilds:  # Iterate through all the guilds
-            cats = guild.categories  # Get all the categories of this guild
-            for cat in cats:  # Iterate through all the categories in the guild
-                if cat.name.startswith("QUEUE "):  # Check if the category is a QUEUE
-                    for channel in cat.channels:  # Iterate through all the channels in this category
-                        await channel.delete()  # Delete the channel
-                    await cat.delete()  # Delete the category
-            roles = guild.roles  # Get all the roles of the guild
-            for role in roles:  # Iterate through all the roles in the guild
-                if role.name.startswith("QUEUE "):  # Check if the role is a QUEUE role
-                    await role.delete()  # Delete the role
+        guilds = client.guilds
+        for guild in guilds:
+            cats = guild.categories
+            for cat in cats:
+                if cat.name.startswith("QUEUE "):
+                    for channel in cat.channels:
+                        await channel.delete()
+                    await cat.delete()
+            roles = guild.roles
+            for role in roles:
+                if role.name.startswith("QUEUE "):
+                    await role.delete()
 
-    async def on_message(self, m):  # New Message
+    async def on_message(self, m):
+        if m.author == client.user:
+            return
+        elif m.content.startswith("!startQ ") or m.content.startswith("!startq "):
+            await create_queue(m)
+        for queue in QUEUES:
+            if m.channel.category == queue.category:
+                await queue.handle_message(m)
 
-        try:
-            if m.author == client.user:  # Check if the author of the message is the bot itself
-                return
-            elif m.content.startswith("!startQ ") or m.content.startswith("!startq "):  # Check for start command
-                await create_queue(m)  # Start a new QUEUE Session
+    async def on_voice_state_update(self, member, before, after):
+        for queue in QUEUES:
+            if after.channel is queue.queue_channel:
+                print("New person")
+                await queue.person_joined(member)
+            elif before.channel is queue.queue_channel:
+                await queue.person_left(member)
 
-            for queue in QUEUES:  # Iterate through all the Queues on all servers
-                if m.channel.category == queue.category:
-                    await queue.handle_message(m)  # Handle a message for a specific queue
-        except PermissionError:
-            print("Permissions!!!")
-            await m.channel.send("I need more permissions")
-
+    async def on_reaction_add(self, reaction, user):
+        for queue in QUEUES:
+            if reaction.message.channel.category == queue.category:
+                await queue.handle_reaction(reaction, user)
 
 
 client = BotClient()
-client.run("ODU5Nzk1NTMzMDQ3OTIyNzE4.YNx4_Q.NLGCH7vrbWDb87SdhRqrs8onBwM")
+client.run("")
