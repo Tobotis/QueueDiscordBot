@@ -5,7 +5,7 @@ import os
 token = os.getenv("queuebottoken")
 QUEUES = []  # Keeps track of all running queues
 KICK_EMOJI = "⏹"
-NEXT_EMOJI = "↪"
+NEXT_EMOJI = "⏩"
 NEXT_RANDOM_EMOJI = "🔀"
 
 

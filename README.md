@@ -12,7 +12,7 @@
         - `!kick` disconnects the current guest
 
 - **Reactions**
-    - `↪` disconnects the current guest and moves in the next one of the queue
+    - `⏩` disconnects the current guest and moves in the next one of the queue
     - `🔀` disconnects the current guest and moves in a random guest from the queue
     - `⏹` disconnects the current guest
     
