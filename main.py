@@ -1,6 +1,6 @@
 import discord
 import random
-
+token = os.getenv("queuebottoken")
 QUEUES = []  # Keeps track of all running queues
 KICK_EMOJI = "⏹"
 NEXT_EMOJI = "↪"
@@ -193,4 +193,4 @@ class BotClient(discord.Client):
 
 
 client = BotClient()
-client.run("") ### Insert TOKEN !!!
+client.run(token) 
