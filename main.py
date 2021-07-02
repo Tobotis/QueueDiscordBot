@@ -25,6 +25,7 @@ HELP_MESSAGE = """
     https://github.com/Tobotis/QueueDiscordBot
     """
 
+
 async def create_queue(message):
     name = str(message.content)[7:]
     already_used = False
@@ -87,7 +88,8 @@ class Queue:
                 await self.queue_channel.set_permissions(role, speak=False, connect=True)
 
     async def rebuild_manager(self):
-        await self.manager_channel.purge()
+        if self.manager_channel is not None:
+            await self.manager_channel.purge()
 
         message = await self.manager_channel.send(
             embed=self.get_manager_embed())
@@ -118,11 +120,11 @@ class Queue:
         if m.author == self.host:
             if m.content.startswith("!endQ") or m.content.startswith("!endq"):
                 print("ending queue")
+                QUEUES.remove(self)
                 for channel in self.category.channels:
                     await channel.delete()
                 await self.role.delete()
                 await self.category.delete()
-                QUEUES.remove(self)
             elif m.content.startswith("!next"):
                 await self.next_person()
             elif m.content.startswith("!kick"):
@@ -175,7 +177,7 @@ class Queue:
 
 class BotClient(discord.Client):
     async def on_ready(self):
-        await client.change_presence(activity=discord.Activity(name=" !helpQ", type=discord.ActivityType.watching))
+        await client.change_presence(activity=discord.Activity(name=" !helpQ", type=discord.ActivityType.listening))
         print("Initialization...")
         guilds = client.guilds
         for guild in guilds:
