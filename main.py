@@ -7,13 +7,28 @@ QUEUES = []  # Keeps track of all running queues
 KICK_EMOJI = "⏹"
 NEXT_EMOJI = "⏩"
 NEXT_RANDOM_EMOJI = "🔀"
-
+HELP_MESSAGE = """
+    - **Commands**
+        - **Commands in all channels**
+            - `!helpQ` displays this message
+            - `!startQ [name of queue]` hosts a new queue
+        - **Commands in manager channel**
+            - `!endQ` ends the queue and deletes everything
+            - `!next` disconnects the current guest and moves in the next one of the queue
+            - `!random` disconnects the current guest and moves in a random guest from the queue
+            - `!kick` disconnects the current guest
+    - **Reactions**
+        - `⏩` disconnects the current guest and moves in the next one of the queue
+        - `🔀` disconnects the current guest and moves in a random guest from the queue
+        - `⏹` disconnects the current guest
+    """
 
 async def create_queue(message):
     name = str(message.content)[7:]
     already_used = False
-    if name is None:
-        await message.channel.send("No valid !startQ command: !startQ [queue title]")
+    print(name)
+    if name is None or name == "":
+        await message.channel.send("No valid !startQ command. Please use:\n`!startQ [queue title]`")
         return
     for queue in QUEUES:
         if name.upper() == queue.category.name.upper()[7:]:
@@ -151,8 +166,9 @@ class Queue:
         await self.rebuild_manager()
 
     async def person_left(self, member, ):
-        self.waiting_people.remove(member)
-        await self.rebuild_manager()
+        if member in self.waiting_people:
+            self.waiting_people.remove(member)
+            await self.rebuild_manager()
 
 
 class BotClient(discord.Client):
@@ -175,8 +191,10 @@ class BotClient(discord.Client):
         print("Message")
         if m.author == client.user:
             return
-        elif m.content.startswith("!startQ ") or m.content.startswith("!startq "):
+        elif m.content.startswith("!startQ") or m.content.startswith("!startq"):
             await create_queue(m)
+        elif m.content.startswith("!helpQ") or m.content.startswith("!helpq"):
+            await m.channel.send(HELP_MESSAGE)
         else:
             for queue in QUEUES:
                 if m.channel == queue.manager_channel:
@@ -186,10 +204,10 @@ class BotClient(discord.Client):
     async def on_voice_state_update(self, member, before, after):
         print("Voice state update")
         for queue in QUEUES:
-            if after.channel == queue.queue_channel:
+            if after.channel == queue.queue_channel and before.channel != after.channel:
                 print(member.name + " joined the queue")
                 await queue.person_joined(member)
-            elif before.channel == queue.queue_channel:
+            elif before.channel == queue.queue_channel and before.channel != after.channel:
                 print(member.name + " left the queue")
                 await queue.person_left(member)
 
