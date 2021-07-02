@@ -4,7 +4,7 @@
 -
 - Add your bot token in the ENV-Variable "queuebottoken"
 
-**MODE 1 (attempt_2):**
+**MODE 1 (attempt_2) needs less permissions:**
 -
 **USAGE:**
 - **Commands**
