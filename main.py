@@ -28,7 +28,7 @@ async def create_queue(message):
     already_used = False
     print(name)
     if name is None or name == "":
-        await message.channel.send("No valid !startQ command. Please use:\n`!startQ [queue title]`")
+        await message.channel.send("Please use:\n`!startQ [queue title]`")
         return
     for queue in QUEUES:
         if name.upper() == queue.category.name.upper()[7:]:
