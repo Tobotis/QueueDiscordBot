@@ -13,7 +13,7 @@
         - `!initQ [name of channel]` pick a channel to be the queue
         - `!endQ` ends the queue
         - `!togglerandom` sets the mode to random
-- **Move the bot from queue to main channel to move the next from queue**    
+- **Move the bot from queue to main channel to move the next person from queue**    
 
 **MODE 2 (attempt_1):**
 -
