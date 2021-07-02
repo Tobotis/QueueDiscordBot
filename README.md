@@ -4,7 +4,8 @@
 -
 - **Commands**
     - **Commands in all channels**
-        - `!startQ [name of queue]` -> Host a new queue
+        - `!helpQ` displays this paragraph
+        - `!startQ [name of queue]` hosts a new queue
     - **Commands in manager channel**
         - `!endQ` ends the queue and deletes everything
         - `!next` disconnects the current guest and moves in the next one of the queue
