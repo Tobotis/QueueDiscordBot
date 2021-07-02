@@ -21,6 +21,8 @@ HELP_MESSAGE = """
         - `⏩` disconnects the current guest and moves in the next one of the queue
         - `🔀` disconnects the current guest and moves in a random guest from the queue
         - `⏹` disconnects the current guest
+        
+    https://github.com/Tobotis/QueueDiscordBot
     """
 
 async def create_queue(message):
@@ -173,6 +175,7 @@ class Queue:
 
 class BotClient(discord.Client):
     async def on_ready(self):
+        await client.change_presence(activity=discord.Activity(name=" !helpQ", type=discord.ActivityType.watching))
         print("Initialization...")
         guilds = client.guilds
         for guild in guilds:
