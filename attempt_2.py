@@ -155,6 +155,7 @@ class BotClient(discord.Client):  # Client class
                 await QUEUES[m.guild.id].toggle_messages(m)  # Switch the embed mode
             elif m.content.startswith("!endQ") or m.content.startswith("!endq"):  # Check if its the !endQ command
                 print("Got !endQ command")
+                await m.channel.guild.voice_client.disconnect()
                 for voice_client in client.voice_clients:  # Iterate voice_clients of bot
                     if voice_client.channel.guild == m.channel.guild and voice_client.is_connected():  # Check if the
                         # voice client is connected at the current server
