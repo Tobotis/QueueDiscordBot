@@ -1,10 +1,16 @@
 # QueueDiscordBot
 
+**1. Invite the bot:**
+
+https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840 
+
+**2. You want to host it yourself?:**
+
 **TODO:**
 -
 - Add your bot token in the ENV-Variable "queuebottoken"
 
-**MODE 1 (attempt_2):**
+**MODE 1 (attempt_2) needs less permissions:**
 -
 **USAGE:**
 - **Commands**
