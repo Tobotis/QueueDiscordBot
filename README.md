@@ -1,10 +1,10 @@
 # QueueDiscordBot
 
-**1. Invite the bot:**
+**Invite the bot:**
 
 https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840 
 
-**2. You want to host it yourself?:**
+**or you want to host it yourself?:**
 
 **TODO:**
 -
