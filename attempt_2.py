@@ -4,14 +4,13 @@ import os
 
 QUEUES = {}  # Keeps track of all the queues at different servers
 HELP_MESSAGE = """- **Commands**
-    - **Commands in all channels**
-        - `!helpQ` displays this paragraph
-        - `!initQ [name of channel]` pick a channel to be the queue
-        - `!endQ` ends the queue
-        - `!togglerandom` toggle randomizer mode
-        - `!toggleembeds` toggle embeds (display of the current queue)
-        - `!togglemessages` toggle messages from the bot
-- **Move the bot from queue to main channel to move the next person from queue**"""
+  - `!helpQ` displays this paragraph
+  - `!initQ [name of channel]` pick a channel to be the queue
+  - `!endQ` ends the queue
+  - `!togglerandom` toggle randomizer mode
+  - `!toggleembeds` toggle embeds (display of the current queue)
+  - `!togglemessages` toggle messages from the bot
+- **Move the bot from queue to main channel to move the next person from queue**    """
 
 
 async def init_queue(m):  # Initiates a queue
