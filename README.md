@@ -2,6 +2,8 @@
 
 https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840 
 
+**You want to host it yourself?**
+
 **TODO:**
 -
 - Add your bot token in the ENV-Variable "queuebottoken"
