@@ -18,7 +18,9 @@ https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&perm
         - `!helpQ` displays this paragraph
         - `!initQ [name of channel]` pick a channel to be the queue
         - `!endQ` ends the queue
-        - `!togglerandom` sets the mode to random
+        - `!togglerandom` toggle randomizer mode
+        - `!toggleembeds` toggle embeds (display of the current queue)
+        - `!togglemessages` toggle messages from the bot
 - **Move the bot from queue to main channel to move the next person from queue**    
 
 **MODE 2 (attempt_1):**
