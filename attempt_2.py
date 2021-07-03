@@ -5,11 +5,10 @@ import os
 QUEUES = {}  # Keeps track of all the queues at different servers
 HELP_MESSAGE = """**USAGE:**
 - **Commands**
-    - **Commands in all channels**
-        - `!helpQ` displays this paragraph
-        - `!initQ [name of channel]` pick a channel to be the queue
-        - `!endQ` ends the queue
-        - `!togglerandom` sets the mode to random
+    - `!helpQ` displays this paragraph
+    - `!initQ [name of channel]` pick a channel to be the queue
+    - `!endQ` ends the queue
+    - `!togglerandom` sets the mode to random
 - **Move the bot from queue to main channel to move the next person from queue**"""
 
 
@@ -30,10 +29,10 @@ async def init_queue(m):  # Initiates a queue
             if member != client.user:  # Check if it is the bot itself
                 people_waiting.append(member)  # Add the person to the people who are already waiting
         QUEUES[m.guild.id] = Queue(channel, m.channel, people_waiting)  # Instantiate a new queue
-        await QUEUES[m.guild.id].rebuild_overview()  # Send the embed
         await channel.connect()  # Join the channel
         await m.channel.send(
             ":white_check_mark: The channel `{}` turned into a queue".format(channel.name))  # Send a completion message
+        await QUEUES[m.guild.id].rebuild_overview()  # Send the embed
     else:
         await m.channel.send(":x: Please provide a channel `!initQ [CHANNEL NAME]`")
 
@@ -50,19 +49,23 @@ class Queue:  # Queue class
         if len(self.queue) == 0:  # Check if the queue is empty
             await self.manager_channel.send(":pensive: Nobody in queue")  # Provide infromation
             return
-        await self.rebuild_overview()  # Resend the embed
+
         if self.random:  # Check if mode is random
             print("Picking random")
             random_member = self.queue[random.randint(0, len(self.queue) - 1)]  # Pick a random person from the queue
+            self.queue.remove(random_member)
             await random_member.move_to(channel)  # Move the person to the new channel
             await self.manager_channel.send(":white_check_mark: Moved " + random_member.name)  # Send completion message
+            await self.rebuild_overview()
         else:
             print("Picking not random")
             for person in self.queue:  # Iterate through all the waiting people
                 if person in self.queue_channel.members:  # Pick the first one who is in the queue channel
+                    self.queue.remove(person)
                     await person.move_to(channel)  # Move the person to the new channel
                     await self.manager_channel.send(
-                        ":white_check_mark: Moved " + person.name)  # Send completion message
+                        ":white_check_mark: Moved " + person.name)  # Send explanation message
+                    await self.rebuild_overview()
                     return
                 print("Skipped one")
 
@@ -74,12 +77,16 @@ class Queue:  # Queue class
         if member != client.user:  # Check if the person who joined is not the bot
             self.queue.append(member)  # Add the person in the queue
             print(member.name + " joined the queue")
+            await self.manager_channel.send(
+                ":wave: " + member.name + " joined")  # Send explanation message
             await self.rebuild_overview()  # Resend the embed
 
     async def person_left(self, member, ):
         if member in self.queue and member != client.user:  # Check if the person who left is not the bot and is
             # still in queue
             self.queue.remove(member)  # Remove the person from the queue
+            await self.manager_channel.send(
+                ":wave: " + member.name + " left")  # Send explanation message
             print(member.name + " left the queue")
             await self.rebuild_overview()  # Resend the embed
 
@@ -89,9 +96,9 @@ class Queue:  # Queue class
 
     def get_overview_embed(self):
         embed = discord.Embed(title="Newest Queue", colour=discord.Colour(0xd02e1c),
-                              description="**Random:**  " + (":white_check_mark:" if self.random else ":x:"))
+                              description="**Random:**  " + (":white_check_mark:" if self.random else ":x:"),)
         if len(self.queue) == 0:
-            embed.add_field(name=":warning: ", value="Nobody waiting...")
+            embed.add_field(name=":warning: Empty", value="\u200b")
         for person in self.queue:
             embed.add_field(
                 name="**" + str(self.queue.index(person) + 1) + ".**  {}".format(person.name),
@@ -124,10 +131,10 @@ class BotClient(discord.Client):  # Client class
                     if voice_client.channel.guild == m.channel.guild and voice_client.is_connected():  # Check if the
                         # voice client is connected at the current server
                         print("Disconnected voice client")
-                        await voice_client.disconnect(None)  # Disconnect the voice client
+                        await voice_client.disconnect()  # Disconnect the voice client
                 del QUEUES[m.channel.guild.id]  # Delete the running queue
                 await m.channel.send(":white_check_mark: Queue ended")
-        else:
+        elif m.content.startswith("!togglerandom") or m.content.startswith("!endQ") or m.content.startswith("!endq"):
             await m.channel.send(":x: There is no queue running")
 
         if m.content.startswith("!helpQ") or m.content.startswith("!helpq"):  # Check if its the !helpQ command
