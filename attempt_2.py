@@ -139,6 +139,8 @@ class BotClient(discord.Client):  # Client class
         print("Ready...")
 
     async def on_message(self, m):  # Noticed a message
+        if m.guild is None:  # Check if the message is a direct message => do nothing and return
+            return
         if m.author == client.user:  # Check if it is from the bot itself => do nothing
             return
         elif m.content.startswith("!initQ") or m.content.startswith("!initq"):  # Check if its the !initQ command
