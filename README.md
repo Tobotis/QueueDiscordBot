@@ -2,7 +2,7 @@
 
 **Invite the bot:**
 
-https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840 
+[Here](https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840)
 
 **or you want to host it yourself?:**
   - Add your bot token in the ENV-Variable "queuebottoken"
