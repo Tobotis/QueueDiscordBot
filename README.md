@@ -8,8 +8,7 @@
   - Add your bot token in the ENV-Variable "queuebottoken"
   - Run the mode of your choice
 
-**MODE 1 (attempt_2) needs less permissions:**
--
+
 **USAGE:**
 - **Commands**
   - `!helpQ` displays this paragraph
@@ -20,7 +19,10 @@
   - `!togglemessages` toggle messages from the bot
 - **Move the bot from queue to main channel to move the next person from queue**    
 
-**MODE 2 (attempt_1):**
+
+
+**(deprecated):**
+´attempt_1´
 -
 **USAGE:**
 - **Commands**
