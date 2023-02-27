@@ -4,11 +4,6 @@
 
 [Here](https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840)
 
-**or you want to host it yourself?:**
-  - Add your bot token in the ENV-Variable "queuebottoken"
-  - Run the mode of your choice
-
-
 **USAGE:**
 - **Commands**
   - `!helpQ` displays this paragraph
