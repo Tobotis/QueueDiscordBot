@@ -198,7 +198,8 @@ class BotClient(discord.Client):  # Client class
                         # queue channel
                         await QUEUES[before.channel.guild.id].person_left(member)  # Remove the person from the queue
 
-
+intents = discord.Intents.default()
+intents.message_content = True
 token = os.getenv("queuebottoken")  # Get the token env-variable
-client = BotClient()  # Instantiate the client class
+client = BotClient(intents=intents)  # Instantiate the client class
 client.run(token)  # Run the client with the token
