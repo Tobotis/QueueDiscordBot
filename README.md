@@ -1,10 +1,8 @@
 # QueueDiscordBot
 
-**Invite the bot:**
+Invite the bot: [Here](https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840)
 
-[Here](https://discord.com/oauth2/authorize?client_id=859795533047922718&scope=bot&permissions=17827840)
-
-**USAGE:**
+## Usage:
 - **Commands**
   - `!helpQ` displays this paragraph
   - `!initQ [name of channel]` pick a channel to be the queue
@@ -16,7 +14,7 @@
 
 
 
-**(deprecated):**
+## Old Version:
 `old.py`
 -
 **USAGE:**
