@@ -22,7 +22,7 @@
 
 
 **(deprecated):**
-`attempt_1`
+`old`
 -
 **USAGE:**
 - **Commands**
