@@ -16,7 +16,8 @@ Invite the bot: [Here](https://discord.com/oauth2/authorize?client_id=8597955330
 
 ## Old Version:
 
-`old.py`
+file: `old.py`
+
 **USAGE:**
 - **Commands**
     - **Commands in all channels**
