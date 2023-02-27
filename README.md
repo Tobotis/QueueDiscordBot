@@ -22,7 +22,7 @@
 
 
 **(deprecated):**
-`old`
+`old.py`
 -
 **USAGE:**
 - **Commands**
